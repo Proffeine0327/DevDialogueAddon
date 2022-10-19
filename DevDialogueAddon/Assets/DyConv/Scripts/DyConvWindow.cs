@@ -1,22 +1,25 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
-
-enum ShowType
-{
-    none,
-    fact,
-    dialogue,
-}
 
 public class DyConvWindow : EditorWindow
 {
     Facts facts;
+    List<Dialogue> dialogues = new List<Dialogue>();
+    
     Vector2 factsScrollPosition = new Vector2();
+    Vector2 dialoguesScrollPosition = new Vector2();
+
     FactValue currentFactValue;
-    ShowType showType;
+    string currentFactName;
+
+    Dialogue currentDialogueValue;
+    string dialogueText;
+
+    int showType; // 0 == none, 1 == fact, 2 == dialogue
 
     [MenuItem("DyConv/Window")]
     public static void Open()
@@ -50,59 +53,99 @@ public class DyConvWindow : EditorWindow
         GUI.skin.button.fontSize = 13;
 
         factsScrollPosition = GUI.BeginScrollView(new Rect(5, 35, Screen.width * 0.2f - 10, Screen.height - 65),
-            factsScrollPosition, new Rect(0, 0, Screen.width * 0.15f, 30 * facts.allFacts.Count + 120));
-        int index = 0;
-        for (index = 0; index < facts.allFacts.Count; index++)
+            factsScrollPosition, new Rect(0, 0, Screen.width * 0.15f, 30 * facts.allFacts.Count + 90));
+        int factRectIndex = 0;
+        for (factRectIndex = 0; factRectIndex < facts.allFacts.Count; factRectIndex++)
         {
-            if (GUI.Button(new Rect(5, 5 + (index * 25), Screen.width * 0.2f - 25, 25), facts.allFacts.keys[index]))
+            if (GUI.Button(new Rect(5, 5 + (factRectIndex * 25), Screen.width * 0.2f - 25, 25), facts.allFacts.keys[factRectIndex]))
             {
                 if (Event.current.button == 1)
                 {
-                    facts.allFacts.Remove(facts.allFacts.keys[index]);
-                    if (currentFactValue == facts.allFacts.values[index])
+                    facts.allFacts.Remove(facts.allFacts.keys[factRectIndex]);
+                    if (currentFactValue == facts.allFacts.values[factRectIndex])
                         currentFactValue = null;
-                    showType = ShowType.none;
+                    showType = 0;
 
                     EditorUtility.SetDirty(facts);
                     AssetDatabase.SaveAssetIfDirty(facts);
                 }
                 else
                 {
-                    currentFactValue = facts.allFacts.values[index];
-                    showType = ShowType.fact;
+                    currentFactValue = facts.allFacts.values[factRectIndex];
+                    currentFactName = facts.allFacts.keys[factRectIndex];
+                    showType = 1;
                 }
             }
             GUI.skin.label.alignment = TextAnchor.MiddleRight;
             string showValue = "";
-            if (index < facts.allFacts.values.Count)
+            if (factRectIndex < facts.allFacts.values.Count)
             {
-                if (facts.allFacts.values[index].type == FactValueType.Bool)
-                    showValue = Convert.ToBoolean(facts.allFacts.values[index].value).ToString();
+                if (facts.allFacts.values[factRectIndex].type == FactValueType.Bool)
+                    showValue = Convert.ToBoolean(facts.allFacts.values[factRectIndex].value).ToString();
                 else
-                    showValue = facts.allFacts.values[index].value.ToString();
+                    showValue = facts.allFacts.values[factRectIndex].value.ToString();
             }
-            GUI.Label(new Rect(5, 5 + (index * 25), Screen.width * 0.2f - 30, 25), showValue);
+            GUI.Label(new Rect(5, 5 + (factRectIndex * 25), Screen.width * 0.2f - 30, 25), showValue);
         }
-        if (GUI.Button(new Rect(5, 5 + (index * 25), Screen.width * 0.2f - 25, 25), "Add..", EditorStyles.foldout))
-            AddFactWidow.Open();
+        GUI.skin.button.alignment = TextAnchor.MiddleCenter;
+        if (GUI.Button(new Rect(Screen.width * 0.1f - 100, 10 + (factRectIndex * 25), 190, 25), "Add New Fact"))
+            AddFactWindow.Open();
+        GUI.EndScrollView();
+        #endregion
+
+        #region Dialogue
+
+        dialogues.Clear();
+        string[] dialogueGuids = AssetDatabase.FindAssets("", new string[] { "Assets/DyConv/Container/Dialogues" });
+        for (int i = 0; i < dialogueGuids.Length; i++) dialogues.Add(AssetDatabase.LoadAssetAtPath<Dialogue>(AssetDatabase.GUIDToAssetPath(dialogueGuids[i])));
+
+        GUI.skin.button.alignment = TextAnchor.MiddleLeft;
+        dialoguesScrollPosition = GUI.BeginScrollView(new Rect(5 + (Screen.width * 0.20f), 35, Screen.width * 0.2f - 10, Screen.height - 65),
+            dialoguesScrollPosition, new Rect(0, 0, Screen.width * 0.15f, dialogues.Count + 90));
+        int dialogueRectIndex = 0;
+        for (dialogueRectIndex = 0; dialogueRectIndex < dialogues.Count; dialogueRectIndex++)
+        {
+            if (GUI.Button(new Rect(5, 5 + (dialogueRectIndex * 25), Screen.width * 0.2f - 20, 25), dialogues[dialogueRectIndex].name))
+            {
+                if (Event.current.button == 1)
+                {
+                    AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(dialogues[dialogueRectIndex]));
+                    AssetDatabase.SaveAssets();
+
+                    if(currentDialogueValue == dialogues[dialogueRectIndex])
+                        currentDialogueValue = null;
+                    
+                    showType = 0;
+                }
+                else
+                {
+                    currentDialogueValue = dialogues[dialogueRectIndex];
+                    dialogueText = currentDialogueValue.dialogue;
+                    showType = 2;
+                }
+            }
+        }
+
+        GUI.skin.button.alignment = TextAnchor.MiddleCenter;
+        if (GUI.Button(new Rect(Screen.width * 0.1f - 100, 10 + (dialogueRectIndex * 25), 190, 25), "Add New Dialogue"))
+            AddDialogueWindow.Open();
         GUI.EndScrollView();
         #endregion
 
         #region Viewer
-
-        switch(showType)
+        switch (showType)
         {
-            case ShowType.fact:
+            case 1:
                 ShowFact();
                 break;
-            
-            case ShowType.dialogue:
+
+            case 2:
+                ShowDialogue();
                 break;
-            
+
             default:
                 break;
         }
-
         #endregion
     }
 
@@ -112,45 +155,62 @@ public class DyConvWindow : EditorWindow
         {
             GUI.skin.label.alignment = TextAnchor.MiddleLeft;
             GUI.skin.label.fontSize = 13;
-            GUI.Label(new Rect(15 + (Screen.width * 0.40f), 35, Screen.width * 0.6f - 20, 30), "Value");
+            GUI.Label(new Rect(15 + (Screen.width * 0.40f), 35, Screen.width * 0.6f - 20, 30), currentFactName);
 
+            GUI.Label(new Rect(15 + (Screen.width * 0.40f), 60, Screen.width * 0.6f - 20, 30), "Value");
             if (currentFactValue.type == FactValueType.Int)
             {
                 EditorGUI.BeginChangeCheck();
-                currentFactValue.value = EditorGUI.DelayedIntField(new Rect(15 + (Screen.width * 0.40f), 65, 300, 20), (int)currentFactValue.value);
+                currentFactValue.value = EditorGUI.IntField(new Rect(75 + (Screen.width * 0.40f), 65, 300, 20), (int)currentFactValue.value);
                 if (EditorGUI.EndChangeCheck())
-                {
                     EditorUtility.SetDirty(facts);
-                    AssetDatabase.SaveAssetIfDirty(facts);
-                }
             }
             if (currentFactValue.type == FactValueType.Float)
             {
                 EditorGUI.BeginChangeCheck();
-                currentFactValue.value = EditorGUI.DelayedFloatField(new Rect(15 + (Screen.width * 0.40f), 65, 300, 20), currentFactValue.value);
+                currentFactValue.value = EditorGUI.FloatField(new Rect(75 + (Screen.width * 0.40f), 65, 300, 20), currentFactValue.value);
                 if (EditorGUI.EndChangeCheck())
-                {
                     EditorUtility.SetDirty(facts);
-                    AssetDatabase.SaveAssetIfDirty(facts);
-                }
             }
             if (currentFactValue.type == FactValueType.Bool)
             {
                 string[] options = new string[] { "False", "True" };
 
                 EditorGUI.BeginChangeCheck();
-                currentFactValue.value = EditorGUI.Popup(new Rect(15 + (Screen.width * 0.40f), 65, 300, 20), (int)currentFactValue.value, options);
+                currentFactValue.value = EditorGUI.Popup(new Rect(75 + (Screen.width * 0.40f), 65, 300, 20), (int)currentFactValue.value, options);
                 if (EditorGUI.EndChangeCheck())
-                {
                     EditorUtility.SetDirty(facts);
-                    AssetDatabase.SaveAssetIfDirty(facts);
-                }
+            }
+        }
+    }
+
+    void ShowDialogue()
+    {
+        if (currentDialogueValue != null)
+        {
+            GUI.skin.label.alignment = TextAnchor.MiddleLeft;
+            GUI.skin.label.fontSize = 13;
+            GUI.Label(new Rect(15 + (Screen.width * 0.40f), 35, Screen.width * 0.6f - 20, 30), currentDialogueValue.name);
+
+            GUIStyle style = new GUIStyle(EditorStyles.textArea);
+            style.wordWrap = true;
+
+            EditorGUI.BeginChangeCheck();
+            currentDialogueValue.dialogue = EditorGUI.TextArea(new Rect(15 + (Screen.width * 0.40f), 70, Screen.width * 0.6f - 20, 50), currentDialogueValue.dialogue, style);
+            if (EditorGUI.EndChangeCheck())
+                EditorUtility.SetDirty(currentDialogueValue);
+
+            Rect nextDialogue = new Rect() { x = 15 + (Screen.width * 0.40f), y = 100 , width = 100, height = 20 };
+            
+            for(int i = 0; i < currentDialogueValue.nextDialogues.Count; i++)
+            {
+                
             }
         }
     }
 }
 
-public class AddFactWidow : EditorWindow
+public class AddFactWindow : EditorWindow
 {
     Facts facts;
     string tagString;
@@ -158,7 +218,7 @@ public class AddFactWidow : EditorWindow
 
     public static void Open()
     {
-        AddFactWidow addFactWidow = EditorWindow.CreateInstance<AddFactWidow>();
+        AddFactWindow addFactWidow = EditorWindow.CreateInstance<AddFactWindow>();
         addFactWidow.ShowAsDropDown(new Rect(EditorGUIUtility.GUIToScreenPoint(Event.current.mousePosition), Vector2.zero), new Vector2(250, 20));
         addFactWidow.facts = AssetDatabase.LoadAssetAtPath<Facts>("Assets/DyConv/Container/Facts.asset");
     }
@@ -186,6 +246,46 @@ public class AddFactWidow : EditorWindow
 
             EditorUtility.SetDirty(facts);
             AssetDatabase.SaveAssetIfDirty(facts);
+            this.Close();
+        }
+        EditorGUI.EndDisabledGroup();
+        EditorGUILayout.EndHorizontal();
+    }
+}
+
+public class AddDialogueWindow : EditorWindow
+{
+    string path => "Assets/DyConv/Container/Dialogues/";
+    List<string> dialogueNames = new List<string>();
+    string nameString;
+    FactValueType type;
+
+    public static void Open()
+    {
+        AddDialogueWindow addDialogueWidow = EditorWindow.CreateInstance<AddDialogueWindow>();
+        string[] dialogueGuids = AssetDatabase.FindAssets("", new string[] { "Assets/DyConv/Container/Dialogues" });
+        for (int i = 0; i < dialogueGuids.Length; i++) addDialogueWidow.dialogueNames.Add((AssetDatabase.LoadAssetAtPath<Dialogue>(AssetDatabase.GUIDToAssetPath(dialogueGuids[i])) as Dialogue).name);
+        addDialogueWidow.ShowAsDropDown(new Rect(EditorGUIUtility.GUIToScreenPoint(Event.current.mousePosition), Vector2.zero), new Vector2(250, 20));
+    }
+
+    private void OnGUI()
+    {
+        EditorGUILayout.BeginHorizontal();
+        nameString = EditorGUILayout.TextField(nameString);
+
+        bool isDisable = false;
+
+        if (string.IsNullOrWhiteSpace(nameString))
+            isDisable = true;
+        if (dialogueNames.Contains(nameString))
+            isDisable = true;
+
+        EditorGUI.BeginDisabledGroup(isDisable);
+        if (GUILayout.Button("Add"))
+        {
+            Dialogue d = ScriptableObject.CreateInstance<Dialogue>();
+            AssetDatabase.CreateAsset(d, path + nameString + ".asset");
+            AssetDatabase.SaveAssets();
             this.Close();
         }
         EditorGUI.EndDisabledGroup();
