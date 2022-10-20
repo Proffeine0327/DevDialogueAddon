@@ -12,6 +12,7 @@ public class DyConvWindow : EditorWindow
     
     Vector2 factsScrollPosition = new Vector2();
     Vector2 dialoguesScrollPosition = new Vector2();
+    Vector2 viewerScrollPosition = new Vector2();
 
     FactValue currentFactValue;
     string currentFactName;
@@ -26,6 +27,13 @@ public class DyConvWindow : EditorWindow
     {
         DyConvWindow dyConvWindow = EditorWindow.GetWindow<DyConvWindow>("DyConv");
         dyConvWindow.Show();
+    }
+
+    [MenuItem("DyConv/test")]
+    public static void test()
+    {
+        Dialogue dialogue = AssetDatabase.LoadAssetAtPath<Dialogue>("Assets/DyConv/Container/Dialogues/test.asset");
+        dialogue.nextDialogues.Add(new NextDialogue());
     }
 
     private void OnEnable()
@@ -188,24 +196,30 @@ public class DyConvWindow : EditorWindow
     {
         if (currentDialogueValue != null)
         {
-            GUI.skin.label.alignment = TextAnchor.MiddleLeft;
-            GUI.skin.label.fontSize = 13;
-            GUI.Label(new Rect(15 + (Screen.width * 0.40f), 35, Screen.width * 0.6f - 20, 30), currentDialogueValue.name);
+            var baseWidth = GUILayout.MaxWidth(Screen.width * 0.6f - 35);
 
-            GUIStyle style = new GUIStyle(EditorStyles.textArea);
-            style.wordWrap = true;
-
-            EditorGUI.BeginChangeCheck();
-            currentDialogueValue.dialogue = EditorGUI.TextArea(new Rect(15 + (Screen.width * 0.40f), 70, Screen.width * 0.6f - 20, 50), currentDialogueValue.dialogue, style);
-            if (EditorGUI.EndChangeCheck())
-                EditorUtility.SetDirty(currentDialogueValue);
-
-            Rect nextDialogue = new Rect() { x = 15 + (Screen.width * 0.40f), y = 100 , width = 100, height = 20 };
+            viewerScrollPosition = GUI.BeginScrollView(new Rect(10 + (Screen.width * 0.40f), 35, Screen.width * 0.6f - 15, Screen.height - 65), 
+                viewerScrollPosition, new Rect(0,0,Screen.width * 0.1f,1000));
             
+            var labelStyle = new GUIStyle(GUI.skin.label){ fontSize = 15, fixedWidth = Screen.width * 0.6f - 35};
+            EditorGUILayout.LabelField(currentDialogueValue.name, labelStyle);
+            EditorGUILayout.Space(10);
+            
+            labelStyle.fontSize = 12;
+            EditorGUILayout.LabelField("Text", labelStyle);
+            var textAreaStyle = new GUIStyle(EditorStyles.textArea) { wordWrap = true, fixedHeight = 60 };
+            currentDialogueValue.dialogue = EditorGUILayout.TextArea(currentDialogueValue.dialogue, textAreaStyle, baseWidth);
+            EditorGUILayout.Space(30);
+
             for(int i = 0; i < currentDialogueValue.nextDialogues.Count; i++)
             {
-                
+                EditorGUILayout.BeginVertical(GUI.skin.box);
+                EditorGUILayout.TextField("test");
+                EditorGUILayout.EndVertical();
             }
+
+            GUI.EndScrollView();
+            EditorUtility.SetDirty(currentDialogueValue);
         }
     }
 }
