@@ -248,7 +248,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1373536291}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5b6d75f03bd01040ba2763cd97ee9b8, type: 3}
+  m_Script: {fileID: 11500000, guid: 35f8effdc5ee0bd40ac41bc5b40dfa53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speakerName: Luna
+  speakerTag: test
