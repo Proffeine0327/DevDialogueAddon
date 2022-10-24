@@ -8,18 +8,15 @@ using UnityEditor;
 public class SpeakerEditor : Editor
 {
     SerializedProperty _speakerTag;
-    SpeakerTagContainer speakerTagContainer;
 
     private void OnEnable() 
     {
         _speakerTag = serializedObject.FindProperty("speakerTag");   
-        speakerTagContainer = AssetDatabase.LoadAssetAtPath<SpeakerTagContainer>("Assets/DyConv/Container/SpeakerTagContainer.asset")
-            ?? throw new NullReferenceException("SpeakerTagContainer or its parent file does not exist");
     }
 
     public override void OnInspectorGUI()
     {
-        if(!speakerTagContainer.tags.Contains(_speakerTag.stringValue))
+        if(!SpeakerTagContainer.Tags.Contains(_speakerTag.stringValue))
         {
             _speakerTag.stringValue = null;
             serializedObject.ApplyModifiedProperties();

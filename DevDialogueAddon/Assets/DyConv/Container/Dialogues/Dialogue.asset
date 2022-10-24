@@ -9,6 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dcf6a41d0f85a8e47a73bcd7a324ad1d, type: 3}
-  m_Name: SpeakerTagContainer
+  m_Script: {fileID: 11500000, guid: fda9fefd03e06734db3d0e61a37ed3a9, type: 3}
+  m_Name: Dialogue
   m_EditorClassIdentifier: 
+  dialogueText: 
+  nextDialogues: []
