@@ -11,7 +11,7 @@ public class FactContainer : ScriptableObject, ISerializationCallbackReceiver
 
     private List<string> keys = new List<string>();
     private List<FactValue> values = new List<FactValue>();
-    private Dictionary<string, FactValue> factDictionary;
+    private Dictionary<string, FactValue> factDictionary = new Dictionary<string, FactValue>();
     
     public static Dictionary<string, FactValue> FactDictionary => container.factDictionary;
     public static List<string> Keys => container.keys;

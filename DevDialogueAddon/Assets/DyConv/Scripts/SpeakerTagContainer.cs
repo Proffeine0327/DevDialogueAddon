@@ -11,7 +11,7 @@ public class SpeakerTagContainer : ScriptableObject, ISerializationCallbackRecei
         ?? throw new NullReferenceException("SpeakerTagContainer or its parent file does not exist");
 
     private List<string> tagList = new List<string>();
-    private HashSet<string> tags;
+    private HashSet<string> tags = new HashSet<string>();
 
     public static List<string> TagList => container.tagList;
     public static HashSet<string> Tags => container.tags;
