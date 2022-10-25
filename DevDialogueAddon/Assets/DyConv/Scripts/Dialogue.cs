@@ -10,7 +10,7 @@ public class Dialogue : ScriptableObject
     public static Dialogue GetDialogue(string dialogueName) => AssetDatabase.LoadAssetAtPath<Dialogue>($"Assets/DyConv/Container/Dialogues/{dialogueName}.asset")
         ?? throw new System.Exception($"Dialogue, \"{dialogueName}\" is not exist");
 
-    public static List<Dialogue> GetAllDialogues()
+    static List<Dialogue> GetAllDialogues()
     {
         List<Dialogue> dialogues = new List<Dialogue>();
         string[] guids = AssetDatabase.FindAssets("", new string[] { "Assets/DyConv/Container/Dialogues" });
@@ -18,7 +18,6 @@ public class Dialogue : ScriptableObject
 
         return dialogues;
     }
-
 
     public string dialogueText;
     public int count;

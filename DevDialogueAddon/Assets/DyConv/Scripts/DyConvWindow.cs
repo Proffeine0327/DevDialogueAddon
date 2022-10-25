@@ -42,7 +42,7 @@ public class DyConvWindow : EditorWindow
         #region Fact
         EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.MaxHeight(Screen.height / 2));
 
-        var titleStyle = new GUIStyle(EditorStyles.foldout) { alignment = TextAnchor.MiddleLeft, fontSize = 13, fontStyle = FontStyle.Bold };
+        var titleStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontSize = 13, fontStyle = FontStyle.Bold };
         EditorGUILayout.LabelField("Facts", titleStyle);
         factScrollPos = EditorGUILayout.BeginScrollView(factScrollPos, EditorStyles.helpBox);
         for (int i = 0; i < FactContainer.Keys.Count; i++)
@@ -53,9 +53,12 @@ public class DyConvWindow : EditorWindow
 
             var textFieldStyle = new GUIStyle(EditorStyles.textField) { alignment = TextAnchor.MiddleRight };
             EditorGUI.BeginChangeCheck();
-            FactContainer.Values[i] = EditorGUILayout.IntField(FactContainer.Values[i], textFieldStyle, GUILayout.MaxWidth(125));
+            FactContainer.FactDictionary[FactContainer.Keys[i]] = EditorGUILayout.DelayedIntField(FactContainer.Values[i], textFieldStyle, GUILayout.MaxWidth(125));
             if (EditorGUI.EndChangeCheck())
+            {
                 EditorUtility.SetDirty(FactContainer.container);
+                AssetDatabase.SaveAssetIfDirty(FactContainer.container);
+            }
 
 
             if (GUILayout.Button("-", GUILayout.MaxWidth(20)))
@@ -119,7 +122,8 @@ public class DyConvWindow : EditorWindow
         #region Viewer
         EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.MaxWidth(Screen.width * 0.65f), GUILayout.MaxHeight(Screen.height));
         titleStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontSize = 15, fontStyle = FontStyle.Bold };
-        EditorGUILayout.LabelField("Viewer", titleStyle, GUILayout.Height(25));
+        
+        EditorGUILayout.LabelField(currentDialogue != null && isActiveViewer ? $"Dialogue : {currentDialogue.name}" : "Viewer", titleStyle, GUILayout.Height(25));
         EditorGUILayout.Space(5);
 
         viewScrollPos = EditorGUILayout.BeginScrollView(viewScrollPos);
@@ -142,7 +146,6 @@ public class DyConvWindow : EditorWindow
             EditorUtility.SetDirty(currentDialogue);
 
         EditorGUILayout.Space(20);
-        EditorGUILayout.BeginVertical(GUI.skin.box);
 
         while (currentDialogue.nextDialogues.Count != shownNextDialogueList.Count)
         {
@@ -162,17 +165,35 @@ public class DyConvWindow : EditorWindow
 
         for (int i = 0; i < currentDialogue.nextDialogues.Count; i++)
         {
+            int index = i;
             EditorGUILayout.BeginVertical(GUI.skin.box);
             shownNextDialogueList[i] = EditorGUILayout.Foldout(shownNextDialogueList[i], currentDialogue.nextDialogues[i].nextDialogue?.name);
+
+
             if (shownNextDialogueList[i])
             {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel("Next Dialogue");
+                if (GUILayout.Button(currentDialogue.nextDialogues[i].nextDialogue?.name, new GUIStyle(EditorStyles.popup) { alignment = TextAnchor.MiddleLeft }))
+                {
+                    DialogueSerachPopupWindow.Open((x) =>
+                    {
+                        currentDialogue.nextDialogues[index].nextDialogue = Dialogue.GetDialogue(x);
+                        EditorUtility.SetDirty(currentDialogue);
+                        AssetDatabase.SaveAssetIfDirty(currentDialogue);
+                    });
+                }
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.BeginVertical(EditorStyles.objectFieldThumb);
                 shownCriteriaList[i] = EditorGUILayout.Foldout(shownCriteriaList[i], "Criteria");
-                criteriaScrollPos = EditorGUILayout.BeginScrollView(criteriaScrollPos);
                 if (shownCriteriaList[i])
+                {
+                    criteriaScrollPos = EditorGUILayout.BeginScrollView(criteriaScrollPos, GUILayout.Height(95));
                     for (int j = 0; j < currentDialogue.nextDialogues[i].criteriaKeys.Count; j++)
                     {
                         EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-                        if (GUILayout.Button(currentDialogue.nextDialogues[i].criteriaKeys[j]))
+                        if (GUILayout.Button(currentDialogue.nextDialogues[i].criteriaKeys[j], new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleLeft }))
                         {
 
                         }
@@ -180,14 +201,15 @@ public class DyConvWindow : EditorWindow
                         currentDialogue.nextDialogues[i].compareTypes[j] = (CompareType)EditorGUILayout.Popup((int)currentDialogue.nextDialogues[i].compareTypes[j], option,
                             new GUIStyle(EditorStyles.popup) { alignment = TextAnchor.MiddleCenter }, GUILayout.MaxWidth(40));
                         currentDialogue.nextDialogues[i].criteriaValues[j] = EditorGUILayout.IntField(currentDialogue.nextDialogues[i].criteriaValues[j],
-                            new GUIStyle(GUI.skin.textField) { alignment = TextAnchor.MiddleRight }, GUILayout.MaxWidth(125));
+                            new GUIStyle(GUI.skin.textField) { alignment = TextAnchor.MiddleRight }, GUILayout.MaxWidth(175));
                         EditorGUILayout.EndHorizontal();
                     }
-                EditorGUILayout.EndScrollView();
+                    EditorGUILayout.EndScrollView();
+                }
+                EditorGUILayout.EndVertical();
             }
 
             EditorGUILayout.EndVertical();
         }
-        EditorGUILayout.EndVertical();
     }
 }
