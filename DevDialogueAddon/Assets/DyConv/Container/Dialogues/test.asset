@@ -13,4 +13,12 @@ MonoBehaviour:
   m_Name: test
   m_EditorClassIdentifier: 
   dialogueText: 
-  nextDialogues: []
+  count: 0
+  nextDialogues:
+  - nextDialogue: {fileID: 0}
+    criteriaKeys:
+    - test
+    compareTypes: 00000000
+    criteriaValues: 00000000
+    modifyKeys: []
+    modifyValues: 

@@ -7,7 +7,6 @@ using UnityEditor;
 public class AddNewFactWindow : EditorWindow
 {
     string key;
-    FactValueType valueType;
 
     public static void Open()
     {
@@ -21,7 +20,6 @@ public class AddNewFactWindow : EditorWindow
     {
         EditorGUILayout.BeginHorizontal();
         key = EditorGUILayout.TextField(key);
-        valueType = (FactValueType)EditorGUILayout.EnumPopup(valueType, GUILayout.Width(60));
         
         bool isDisable = false;
         if(string.IsNullOrEmpty(key)) isDisable = true;
@@ -30,7 +28,7 @@ public class AddNewFactWindow : EditorWindow
         EditorGUI.BeginDisabledGroup(isDisable);
         if(GUILayout.Button("Add", GUILayout.MaxWidth(50)))
         {
-            FactContainer.FactDictionary.Add(key, new FactValue() { type = valueType });
+            FactContainer.FactDictionary.Add(key, 0);
             EditorUtility.SetDirty(FactContainer.container);
             AssetDatabase.SaveAssetIfDirty(FactContainer.container);
             this.Close();

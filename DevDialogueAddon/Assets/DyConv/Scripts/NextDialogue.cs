@@ -7,14 +7,10 @@ using UnityEngine;
 
 public enum CompareType
 {
-    [Description("==")]
-    Equal,
-    [Description("<=")]
-    Less,
-    [Description(">=")]
-    More,
-    [Description("!=")]
-    Not
+    Equal, // ==
+    Not,   // !=
+    Less,  // <
+    More,  // >
 }
 
 [Serializable]
@@ -24,8 +20,8 @@ public class NextDialogue
 
     public List<string> criteriaKeys = new List<string>();
     public List<CompareType> compareTypes = new List<CompareType>();
-    public List<float> criteriaValues = new List<float>();
+    public List<int> criteriaValues = new List<int>();
 
     public List<string> modifyKeys = new List<string>();
-    public List<float> modifyValues = new List<float>();
+    public List<int> modifyValues = new List<int>();
 }

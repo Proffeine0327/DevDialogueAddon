@@ -10,12 +10,12 @@ public class FactContainer : ScriptableObject, ISerializationCallbackReceiver
     public static FactContainer container => AssetDatabase.LoadAssetAtPath<FactContainer>("Assets/DyConv/Container/FactContainer.asset") ?? throw new NullReferenceException("FactContainer is not Exist");
 
     private List<string> keys = new List<string>();
-    private List<FactValue> values = new List<FactValue>();
-    private Dictionary<string, FactValue> factDictionary = new Dictionary<string, FactValue>();
+    private List<int> values = new List<int>();
+    private Dictionary<string, int> factDictionary = new Dictionary<string, int>();
     
-    public static Dictionary<string, FactValue> FactDictionary => container.factDictionary;
+    public static Dictionary<string, int> FactDictionary => container.factDictionary;
     public static List<string> Keys => container.keys;
-    public static List<FactValue> Values => container.values;
+    public static List<int> Values => container.values;
 
     public void OnBeforeSerialize()
     {
@@ -31,7 +31,7 @@ public class FactContainer : ScriptableObject, ISerializationCallbackReceiver
 
     public void OnAfterDeserialize()
     {
-        factDictionary = new Dictionary<string, FactValue>();
+        factDictionary = new Dictionary<string, int>();
 
         if(keys.Count != values.Count)
             throw new Exception("Count of key list and value list is not match");
