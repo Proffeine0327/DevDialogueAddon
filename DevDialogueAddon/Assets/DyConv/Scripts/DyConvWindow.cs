@@ -14,7 +14,8 @@ public class DyConvWindow : EditorWindow
 
     Vector2 viewScrollPos = new Vector2();
     bool isActiveViewer = false;
-    Dialogue currentDialogue;
+    string currentDialogueName;
+    int currentNextDialogueIndex = -1;
     List<bool> shownNextDialogueList = new List<bool>();
     List<bool> shownCriteriaList = new List<bool>();
     Vector2 criteriaScrollPos = new Vector2();
@@ -79,7 +80,7 @@ public class DyConvWindow : EditorWindow
             {
                 currentFactName = FactContainer.Keys[i];
                 isActiveViewer = false;
-                currentDialogue = null;
+                currentDialogueName = null;
             }
 
             var textFieldStyle = new GUIStyle(EditorStyles.textField) { alignment = TextAnchor.MiddleRight };
@@ -106,11 +107,11 @@ public class DyConvWindow : EditorWindow
             AddNewDialogueWindow.Open();
         }
 
-        EditorGUI.BeginDisabledGroup(!isActiveViewer || currentDialogue == null);
+        EditorGUI.BeginDisabledGroup(!isActiveViewer || currentDialogueName == null);
         if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Minus@2x").image, EditorStyles.iconButton))
         {
-            AssetDatabase.DeleteAsset($"Assets/DyConv/Container/Dialogues/{currentDialogue.name}.asset");
-            currentDialogue = null;
+            AssetDatabase.DeleteAsset($"Assets/DyConv/Container/Dialogues/{currentDialogueName}.asset");
+            currentDialogueName = null;
             isActiveViewer = false;
 
             AssetDatabase.SaveAssets();
@@ -122,14 +123,16 @@ public class DyConvWindow : EditorWindow
 
         for (int i = 0; i < Dialogue.allDialogues.Count; i++)
         {
-            var buttonStyle = new GUIStyle(EditorStyles.label) { alignment = TextAnchor.MiddleLeft , fontSize = 13};
-            buttonStyle.normal.background = (Dialogue.allDialogues[i].name == currentDialogue?.name ? Texture2D.grayTexture : Texture2D.blackTexture);
+            var buttonStyle = new GUIStyle(EditorStyles.label) { alignment = TextAnchor.MiddleLeft, fontSize = 13 };
+            buttonStyle.normal.background = (Dialogue.allDialogues[i].name == currentDialogueName ? Texture2D.grayTexture : Texture2D.blackTexture);
 
             if (GUILayout.Button($" {Dialogue.allDialogues[i].name}", buttonStyle))
             {
-                currentDialogue = Dialogue.allDialogues[i];
+                currentDialogueName = Dialogue.allDialogues[i].name;
                 isActiveViewer = true;
                 currentFactName = null;
+
+                currentNextDialogueIndex = -1;
             }
         }
         EditorGUILayout.EndScrollView();
@@ -141,11 +144,11 @@ public class DyConvWindow : EditorWindow
         EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.MaxWidth(Screen.width * 0.65f), GUILayout.MaxHeight(Screen.height));
         titleStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontSize = 15, fontStyle = FontStyle.Bold };
 
-        EditorGUILayout.LabelField(currentDialogue != null && isActiveViewer ? $"Dialogue : {currentDialogue.name}" : "Viewer", titleStyle, GUILayout.Height(25));
+        EditorGUILayout.LabelField(currentDialogueName != null && isActiveViewer ? $"Dialogue : {currentDialogueName}" : "Viewer", titleStyle, GUILayout.Height(25));
         EditorGUILayout.Space(5);
 
-        viewScrollPos = EditorGUILayout.BeginScrollView(viewScrollPos);
-        if (currentDialogue != null && isActiveViewer)
+        viewScrollPos = EditorGUILayout.BeginScrollView(viewScrollPos, GUIStyle.none, GUI.skin.verticalScrollbar);
+        if (currentDialogueName != null && isActiveViewer)
             Viewer();
         EditorGUILayout.EndScrollView();
         EditorGUILayout.EndVertical();
@@ -156,69 +159,136 @@ public class DyConvWindow : EditorWindow
 
     void Viewer()
     {
+        #region Text Field
         EditorGUILayout.LabelField("Text", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontSize = 13 });
 
         EditorGUI.BeginChangeCheck();
         var textAreaStyle = new GUIStyle(EditorStyles.textArea) { wordWrap = true, fixedHeight = 60, fixedWidth = Screen.width * 0.65f - 15 };
-        currentDialogue.dialogueText = EditorGUILayout.TextArea(currentDialogue.dialogueText, textAreaStyle);
+        Dialogue.GetDialogue(currentDialogueName).dialogueText = EditorGUILayout.TextArea(Dialogue.GetDialogue(currentDialogueName).dialogueText, textAreaStyle);
         if (EditorGUI.EndChangeCheck())
-            EditorUtility.SetDirty(currentDialogue);
+            EditorUtility.SetDirty(Dialogue.GetDialogue(currentDialogueName));
 
         EditorGUILayout.Space(20);
 
-        while (currentDialogue.nextDialogues.Count != shownNextDialogueList.Count)
+        EditorGUILayout.BeginVertical(GUI.skin.box);
+        #endregion
+
+        #region Next Dialogues
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("Next Dialogue");
+
+        if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus@2x").image, EditorStyles.iconButton))
         {
-            if (currentDialogue.nextDialogues.Count < shownNextDialogueList.Count)
+            Dialogue.GetDialogue(currentDialogueName).nextDialogues.Add(new NextDialogue());
+            EditorUtility.SetDirty(Dialogue.GetDialogue(currentDialogueName));
+            AssetDatabase.SaveAssetIfDirty(Dialogue.GetDialogue(currentDialogueName));
+
+            shownNextDialogueList.Add(new bool());
+        }
+
+        EditorGUI.BeginDisabledGroup(currentNextDialogueIndex == -1);
+        if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Minus@2x").image, EditorStyles.iconButton))
+        {
+            Dialogue.GetDialogue(currentDialogueName).nextDialogues.RemoveAt(currentNextDialogueIndex);
+            EditorUtility.SetDirty(Dialogue.GetDialogue(currentDialogueName));
+            AssetDatabase.SaveAssetIfDirty(Dialogue.GetDialogue(currentDialogueName));
+
+            currentNextDialogueIndex = -1;
+        }
+        EditorGUI.EndDisabledGroup();
+
+        EditorGUILayout.EndHorizontal();
+
+        while (Dialogue.GetDialogue(currentDialogueName).nextDialogues.Count != shownNextDialogueList.Count)
+        {
+            if (Dialogue.GetDialogue(currentDialogueName).nextDialogues.Count < shownNextDialogueList.Count)
                 shownNextDialogueList.RemoveAt(shownNextDialogueList.Count - 1);
-            if (currentDialogue.nextDialogues.Count > shownNextDialogueList.Count)
+            if (Dialogue.GetDialogue(currentDialogueName).nextDialogues.Count > shownNextDialogueList.Count)
                 shownNextDialogueList.Add(new bool());
         }
 
-        while (currentDialogue.nextDialogues.Count != shownCriteriaList.Count)
+        while (Dialogue.GetDialogue(currentDialogueName).nextDialogues.Count != shownCriteriaList.Count)
         {
-            if (currentDialogue.nextDialogues.Count < shownCriteriaList.Count)
+            if (Dialogue.GetDialogue(currentDialogueName).nextDialogues.Count < shownCriteriaList.Count)
                 shownCriteriaList.RemoveAt(shownCriteriaList.Count - 1);
-            if (currentDialogue.nextDialogues.Count > shownCriteriaList.Count)
+            if (Dialogue.GetDialogue(currentDialogueName).nextDialogues.Count > shownCriteriaList.Count)
                 shownCriteriaList.Add(new bool());
         }
 
-        for (int i = 0; i < currentDialogue.nextDialogues.Count; i++)
+        for (int i = 0; i < Dialogue.GetDialogue(currentDialogueName).nextDialogues.Count; i++)
         {
-            int index = i;
+            int nextDialogueIndex = i;
+            var nextDialogue = Dialogue.GetDialogue(currentDialogueName).nextDialogues[nextDialogueIndex];
+
             EditorGUILayout.BeginVertical(GUI.skin.box);
 
-            EditorGUILayout.BeginHorizontal();
-            shownNextDialogueList[i] = EditorGUILayout.Foldout(shownNextDialogueList[i], currentDialogue.nextDialogues[i].nextDialogue?.name);
-            if (GUILayout.Button(new GUIContent($" Change", EditorGUIUtility.IconContent("d_RotateTool On").image), new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleCenter }, GUILayout.Width(100)))
+            var nextDialogueHorizontalStyle = new GUIStyle() { fixedHeight = 25 };
+            nextDialogueHorizontalStyle.normal.background = (currentNextDialogueIndex == nextDialogueIndex ? Texture2D.grayTexture : Texture2D.blackTexture);
+
+            EditorGUILayout.BeginHorizontal(nextDialogueHorizontalStyle);
+            shownNextDialogueList[i] = EditorGUILayout.Foldout(shownNextDialogueList[i], nextDialogue.NextDialogueName,
+                 new GUIStyle(EditorStyles.foldout) { fixedWidth = 70,fixedHeight = 25 , fontSize = 13 });
+
+            if (GUILayout.Button("", GUI.skin.label, GUILayout.Height(25)))
+            {
+                currentNextDialogueIndex = i;
+            }
+
+            if (GUILayout.Button(new GUIContent($" Select", EditorGUIUtility.IconContent("d_RotateTool On").image), new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleCenter }, GUILayout.Width(100)))
             {
                 DialogueSerachPopupWindow.Open((x) =>
                 {
-                    currentDialogue.nextDialogues[index].nextDialogue = Dialogue.GetDialogue(x);
-                    EditorUtility.SetDirty(currentDialogue);
-                    AssetDatabase.SaveAssetIfDirty(currentDialogue);
+                    nextDialogue.NextDialogueName = Dialogue.GetDialogue(x).name;
+                    EditorUtility.SetDirty(Dialogue.GetDialogue(currentDialogueName));
+                    AssetDatabase.SaveAssetIfDirty(Dialogue.GetDialogue(currentDialogueName));
                 });
             }
             EditorGUILayout.EndHorizontal();
 
-            if (shownNextDialogueList[i])
+            if (shownNextDialogueList[nextDialogueIndex])
             {
-
                 EditorGUILayout.BeginVertical(EditorStyles.objectFieldThumb);
-                shownCriteriaList[i] = EditorGUILayout.Foldout(shownCriteriaList[i], "Criteria");
+
+                EditorGUILayout.BeginHorizontal();
+                shownCriteriaList[nextDialogueIndex] = EditorGUILayout.Foldout(shownCriteriaList[nextDialogueIndex], "Criteria");
+                if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Plus@2x").image, EditorStyles.iconButton))
+                {
+                    nextDialogue.criteriaKeys.Add("test");
+                    nextDialogue.compareTypes.Add(CompareType.Equal);
+                    nextDialogue.criteriaValues.Add(0);
+
+                    EditorUtility.SetDirty(Dialogue.GetDialogue(currentDialogueName));
+                    AssetDatabase.SaveAssetIfDirty(Dialogue.GetDialogue(currentDialogueName));
+
+                    shownCriteriaList.Add(new bool());
+                }
+
+                if (GUILayout.Button(EditorGUIUtility.IconContent("d_Toolbar Minus@2x").image, EditorStyles.iconButton))
+                {
+
+                }
+                EditorGUILayout.EndHorizontal();
+
                 if (shownCriteriaList[i])
                 {
                     criteriaScrollPos = EditorGUILayout.BeginScrollView(criteriaScrollPos, GUILayout.Height(95));
-                    for (int j = 0; j < currentDialogue.nextDialogues[i].criteriaKeys.Count; j++)
+                    for (int j = 0; j < Dialogue.GetDialogue(currentDialogueName).nextDialogues[i].criteriaKeys.Count; j++)
                     {
+                        int criteriaIndex = j;
                         EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-                        if (GUILayout.Button(currentDialogue.nextDialogues[i].criteriaKeys[j], new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleLeft }))
+                        if (GUILayout.Button(nextDialogue.criteriaKeys[criteriaIndex], new GUIStyle(GUI.skin.button) { alignment = TextAnchor.MiddleLeft }))
                         {
-
+                            FactSearchablePopupWindow.Open((x) =>
+                            {
+                                nextDialogue.criteriaKeys[criteriaIndex] = x;
+                                EditorUtility.SetDirty(Dialogue.GetDialogue(currentDialogueName));
+                                AssetDatabase.SaveAssetIfDirty(Dialogue.GetDialogue(currentDialogueName));
+                            });
                         }
                         string[] option = new string[] { "==", "!=", "<", ">" };
-                        currentDialogue.nextDialogues[i].compareTypes[j] = (CompareType)EditorGUILayout.Popup((int)currentDialogue.nextDialogues[i].compareTypes[j], option,
+                        Dialogue.GetDialogue(currentDialogueName).nextDialogues[i].compareTypes[j] = (CompareType)EditorGUILayout.Popup((int)Dialogue.GetDialogue(currentDialogueName).nextDialogues[i].compareTypes[j], option,
                             new GUIStyle(EditorStyles.popup) { alignment = TextAnchor.MiddleCenter }, GUILayout.MaxWidth(40));
-                        currentDialogue.nextDialogues[i].criteriaValues[j] = EditorGUILayout.IntField(currentDialogue.nextDialogues[i].criteriaValues[j],
+                        Dialogue.GetDialogue(currentDialogueName).nextDialogues[i].criteriaValues[j] = EditorGUILayout.IntField(Dialogue.GetDialogue(currentDialogueName).nextDialogues[i].criteriaValues[j],
                             new GUIStyle(GUI.skin.textField) { alignment = TextAnchor.MiddleRight }, GUILayout.MaxWidth(175));
                         EditorGUILayout.EndHorizontal();
                     }
@@ -226,8 +296,10 @@ public class DyConvWindow : EditorWindow
                 }
                 EditorGUILayout.EndVertical();
             }
-
             EditorGUILayout.EndVertical();
+
         }
+        EditorGUILayout.EndVertical();
+        #endregion
     }
 }

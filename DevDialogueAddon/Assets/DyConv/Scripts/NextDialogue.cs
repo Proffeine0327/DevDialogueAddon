@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.ComponentModel;
 using System.Reflection;
 using System.Collections;
@@ -16,7 +17,32 @@ public enum CompareType
 [Serializable]
 public class NextDialogue
 {
-    public Dialogue nextDialogue;
+    [SerializeField] private string nextDialogueName;
+
+    public string NextDialogueName 
+    {
+        get 
+        {
+            var allDialogueNames =
+                from dname in Dialogue.allDialogues
+                select dname.name;
+            
+            if(allDialogueNames.Contains(nextDialogueName))
+            {
+                return nextDialogueName;
+            }
+            else
+            {
+                nextDialogueName = null;
+                return null;
+            }
+        }
+
+        set
+        {
+            nextDialogueName = value;
+        }
+    }
 
     public List<string> criteriaKeys = new List<string>();
     public List<CompareType> compareTypes = new List<CompareType>();
