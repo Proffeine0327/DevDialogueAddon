@@ -12,3 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29eddf61d95bfa341841618fd7d00c3c, type: 3}
   m_Name: FactContainer
   m_EditorClassIdentifier: 
+  keys:
+  - test
+  - isGround
+  values: 0000000000000000

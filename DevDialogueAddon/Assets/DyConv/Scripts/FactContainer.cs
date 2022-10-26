@@ -9,8 +9,8 @@ public class FactContainer : ScriptableObject, ISerializationCallbackReceiver
 {
     public static FactContainer container => AssetDatabase.LoadAssetAtPath<FactContainer>("Assets/DyConv/Container/FactContainer.asset") ?? throw new NullReferenceException("FactContainer is not Exist");
 
-    private List<string> keys = new List<string>();
-    private List<int> values = new List<int>();
+    [SerializeField] List<string> keys = new List<string>();
+    [SerializeField] List<int> values = new List<int>();
     private Dictionary<string, int> factDictionary = new Dictionary<string, int>();
     
     public static Dictionary<string, int> FactDictionary => container.factDictionary;

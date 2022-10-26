@@ -18,7 +18,7 @@ MonoBehaviour:
   - nextDialogue: {fileID: 11400000}
     criteriaKeys:
     - test
-    compareTypes: 03000000
+    compareTypes: 00000000
     criteriaValues: 64000000
     modifyKeys: []
     modifyValues: 
