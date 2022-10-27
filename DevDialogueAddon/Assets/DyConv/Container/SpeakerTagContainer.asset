@@ -12,3 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dcf6a41d0f85a8e47a73bcd7a324ad1d, type: 3}
   m_Name: SpeakerTagContainer
   m_EditorClassIdentifier: 
+  tagList:
+  - Luna

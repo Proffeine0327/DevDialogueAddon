@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Speaker : BasedSpeaker
 {
-    //Do not use Awake, Start, Update and etc...
-    public override void Say()
+    //Plese do not use Awake, Start, Update and etc...
+    public override void Say(string dialogueText)
     {
-        
+        Debug.Log(dialogueText);
     }
 }

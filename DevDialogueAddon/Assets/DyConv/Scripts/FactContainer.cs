@@ -12,7 +12,7 @@ public class FactContainer : ScriptableObject, ISerializationCallbackReceiver
     [SerializeField] List<string> keys = new List<string>();
     [SerializeField] List<int> values = new List<int>();
     private Dictionary<string, int> factDictionary = new Dictionary<string, int>();
-    
+
     public static Dictionary<string, int> FactDictionary => container.factDictionary;
     public static List<string> Keys => container.keys;
     public static List<int> Values => container.values;

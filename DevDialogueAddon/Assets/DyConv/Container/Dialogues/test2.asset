@@ -12,6 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fda9fefd03e06734db3d0e61a37ed3a9, type: 3}
   m_Name: test2
   m_EditorClassIdentifier: 
-  dialogueText: 
+  dialogueText: 'mayBe this is Suck
+
+'
   count: 0
-  nextDialogues: []
+  nextDialogues:
+  - nextDialogueName: test2
+    criteriaKeys: []
+    compareTypes: 
+    criteriaValues: 
+    modifyKeys: []
+    modifyValues: 

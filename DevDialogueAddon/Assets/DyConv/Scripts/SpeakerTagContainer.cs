@@ -10,7 +10,7 @@ public class SpeakerTagContainer : ScriptableObject, ISerializationCallbackRecei
     public static SpeakerTagContainer container => AssetDatabase.LoadAssetAtPath<SpeakerTagContainer>("Assets/DyConv/Container/SpeakerTagContainer.asset") 
         ?? throw new NullReferenceException("SpeakerTagContainer or its parent file does not exist");
 
-    private List<string> tagList = new List<string>();
+    [SerializeField] private List<string> tagList = new List<string>();
     private HashSet<string> tags = new HashSet<string>();
 
     public static List<string> TagList => container.tagList;
