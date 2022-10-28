@@ -17,34 +17,10 @@ public enum CompareType
 [Serializable]
 public class NextDialogue
 {
-    [SerializeField] private string nextDialogueName;
-
-    public string NextDialogueName 
-    {
-        get 
-        {
-            var allDialogueNames =
-                from dname in Dialogue.allDialogues
-                select dname.name;
-            
-            if(allDialogueNames.Contains(nextDialogueName))
-            {
-                return nextDialogueName;
-            }
-            else
-            {
-                nextDialogueName = null;
-                return null;
-            }
-        }
-
-        set
-        {
-            nextDialogueName = value;
-        }
-    }
+    public string nextDialogueName;
 
     public List<string> criteriaKeys = new List<string>();
+
     public List<CompareType> compareTypes = new List<CompareType>();
     public List<int> criteriaValues = new List<int>();
 

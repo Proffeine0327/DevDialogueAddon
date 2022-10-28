@@ -13,6 +13,5 @@ MonoBehaviour:
   m_Name: FactContainer
   m_EditorClassIdentifier: 
   keys:
-  - test
-  - isGround
-  values: 0000000000000000
+  - test2
+  values: 00000000

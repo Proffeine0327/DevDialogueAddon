@@ -16,10 +16,12 @@ MonoBehaviour:
 
 '
   count: 0
-  nextDialogues:
+  nextDialogueInfos:
   - nextDialogueName: test
-    criteriaKeys: []
-    compareTypes: 
-    criteriaValues: 
-    modifyKeys: []
-    modifyValues: 
+    criteriaKeys:
+    - test2
+    compareTypes: 00000000
+    criteriaValues: 00000000
+    modifyKeys:
+    - test2
+    modifyValues: 00000000

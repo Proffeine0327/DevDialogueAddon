@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -19,8 +21,58 @@ public class Dialogue : ScriptableObject
         return dialogues;
     }
 
+    public static void UpdateDialogue()
+    {
+        var dialogueNames =
+            from dName in Dialogue.allDialogues
+            select dName.name;
+
+        foreach (var dialogue in Dialogue.allDialogues)
+        {
+            for (int i = 0; i < dialogue.nextDialogueInfos.Count;)
+            {
+                if (!dialogueNames.Contains(dialogue.nextDialogueInfos[i].nextDialogueName))
+                {
+                    dialogue.nextDialogueInfos.RemoveAt(i);
+                    EditorUtility.SetDirty(dialogue);
+                }
+                else
+                {
+                    for (int j = 0; j < dialogue.nextDialogueInfos[i].criteriaKeys.Count;)
+                    {
+                        if (!FactContainer.FactDictionary.ContainsKey(dialogue.nextDialogueInfos[i].criteriaKeys[j]))
+                        {
+                            dialogue.nextDialogueInfos[i].criteriaKeys.RemoveAt(j);
+                            dialogue.nextDialogueInfos[i].compareTypes.RemoveAt(j);
+                            dialogue.nextDialogueInfos[i].criteriaValues.RemoveAt(j);
+
+                            EditorUtility.SetDirty(dialogue);
+                        }
+                        else
+                            j++;
+                    }
+
+                    for (int j = 0; j < dialogue.nextDialogueInfos[i].modifyKeys.Count;)
+                    {
+                        if (!FactContainer.FactDictionary.ContainsKey(dialogue.nextDialogueInfos[i].modifyKeys[j]))
+                        {
+                            dialogue.nextDialogueInfos[i].modifyKeys.RemoveAt(j);
+                            dialogue.nextDialogueInfos[i].modifyValues.RemoveAt(j);
+
+                            EditorUtility.SetDirty(dialogue);
+                        }
+                        else
+                            j++;
+                    }
+                    i++;
+                }
+            }
+            AssetDatabase.SaveAssetIfDirty(dialogue);
+        }
+    }
+
     public string dialogueText;
     public int count;
 
-    public List<NextDialogue> nextDialogues = new List<NextDialogue>();
+    public List<NextDialogue> nextDialogueInfos = new List<NextDialogue>();
 }

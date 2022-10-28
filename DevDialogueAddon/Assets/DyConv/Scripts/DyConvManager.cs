@@ -24,13 +24,15 @@ public class DyConvManager : MonoBehaviour
             manager = dm.AddComponent<DyConvManager>();
             DontDestroyOnLoad(dm);
         }
+        
+        DyConvManager.FactDictionary.Clear();
+        DyConvManager.SpeakerDictionary.Clear();
 
         foreach(var fact in FactContainer.FactDictionary) DyConvManager.FactDictionary.Add(fact.Key, fact.Value);
         foreach(var speakerName in SpeakerTagContainer.TagList) DyConvManager.SpeakerDictionary.Add(speakerName, null);
     }
 
-    private void Awake()
-    {
-
+    private void Start() {
+        factDictionary["test"] = 20;
     }
 }
